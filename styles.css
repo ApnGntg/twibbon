@@ -1,0 +1,90 @@
+/* Pengaturan dasar untuk body */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Kotak utama di tengah */
+.container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 550px;
+    width: 100%;
+}
+
+h1 {
+    color: #1a73e8;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+p {
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+/* Styling untuk Canvas (area gambar) */
+#twibbon-canvas {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    max-width: 100%; /* Agar responsif */
+    height: auto;
+}
+
+/* Area untuk tombol-tombol */
+.controls {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Sembunyikan input file bawaan */
+#upload-foto {
+    display: none;
+}
+
+/* Styling untuk tombol kustom */
+.btn {
+    display: inline-block;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    text-align: center;
+}
+
+/* Tombol Upload (yang terlihat seperti tombol) */
+.btn-upload {
+    background-color: #e8f0fe;
+    color: #1a73e8;
+}
+.btn-upload:hover {
+    background-color: #dbe_8_fc;
+}
+
+/* Tombol Download */
+.btn-download {
+    background-color: #1a73e8;
+    color: #ffffff;
+}
+.btn-download:hover {
+    background-color: #155_8_b_0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
