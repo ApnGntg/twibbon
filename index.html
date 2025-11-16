@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buat Twibbon Kamu!</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Website Twibbon Sederhana</h1>
+        <p>Upload fotomu untuk dipasangi bingkai. Kamu bisa menggeser, zoom, dan memutar foto.</p>
+
+        <canvas id="twibbon-canvas" width="500" height="500"></canvas>
+
+        <div class="controls">
+            <label for="upload-foto" class="btn btn-upload">Pilih Foto</label>
+            <input type="file" id="upload-foto" accept="image/*">
+            
+            <button id="download-btn" class="btn btn-download">Download Hasil</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
