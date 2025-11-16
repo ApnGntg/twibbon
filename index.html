@@ -1,28 +1,263 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buat Twibbon Kamu!</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Twibbon Maker — Urban School Anime</title>
+
+<style>
+/* ------------------------------------------------------------------
+   THEME: Anime Urban School — Soft Aesthetic — Calm Mood
+   ------------------------------------------------------------------ */
+
+/* Background anime */
+body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: url('https://i.ibb.co/3sQJ3WP/school-anime-bg.jpg') no-repeat center/cover;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 1s ease;
+}
+
+/* White soft glass effect */
+.glass {
+    background: rgba(255,255,255,0.26);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* Page layout */
+.wrapper {
+    max-width: 1100px;
+    margin: auto;
+    padding: 18px;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 18px;
+}
+
+h1 {
+    text-align: center;
+    color: #fff;
+    font-size: 32px;
+    margin-bottom: 12px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 14px;
+    background: #4e73df;
+    color: white;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.btn:hover {
+    transform: scale(1.05);
+}
+
+/* Frame thumbnails */
+.frame-thumb {
+    width: 80px;
+    height: 80px;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: 0.2s;
+}
+
+.frame-thumb.selected {
+    border-color: #4e73df;
+    transform: scale(1.06);
+}
+
+#framesList {
+    display: flex;
+    gap: 12px;
+}
+
+/* Preview */
+.preview-box {
+    width: 100%;
+    aspect-ratio: 1/1;
+    background: rgba(255,255,255,0.3);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#photoPreview {
+    max-width: 100%;
+    display: none;
+}
+
+/* Floating draggable text */
+#overlayText {
+    position: absolute;
+    color: white;
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(0,0,0,0.6);
+    cursor: move;
+    user-select: none;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile responsive */
+@media (max-width: 760px) {
+    .wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
+
 <body>
 
-    <div class="container">
-        <h1>Website Twibbon Sederhana</h1>
-        <p>Upload fotomu untuk dipasangi bingkai. Kamu bisa menggeser, zoom, dan memutar foto.</p>
+<h1>Twibbon Maker — Urban School Anime</h1>
 
-        <canvas id="twibbon-canvas" width="500" height="500"></canvas>
+<div class="wrapper">
 
-        <div class="controls">
-            <label for="upload-foto" class="btn btn-upload">Pilih Foto</label>
-            <input type="file" id="upload-foto" accept="image/*">
-            
-            <button id="download-btn" class="btn btn-download">Download Hasil</button>
+    <!-- LEFT SIDE -->
+    <section class="glass">
+        <h2>Preview</h2>
+
+        <div class="preview-box" id="previewWrap">
+            <img id="photoPreview" />
+            <img id="framePreview" style="position:absolute;max-width:100%;" />
+            <div id="overlayText"></div>
+            <canvas id="resultCanvas" width="1080" height="1080" style="display:none"></canvas>
         </div>
-    </div>
 
-    <script src="script.js"></script>
+        <br>
+
+        <button class="btn" onclick="downloadImage()">Download PNG</button>
+    </section>
+
+    <!-- RIGHT SIDE -->
+    <aside class="glass">
+        <h2>Upload Foto</h2>
+
+        <input id="photoInput" type="file" accept="image/*" class="btn" />
+
+        <br><br>
+
+        <h3>Pilih Frame</h3>
+        <div id="framesList">
+            <img src="https://i.ibb.co/WpSk7Rh/frame1-blue.png" class="frame-thumb selected" data-src="https://i.ibb.co/WpSk7Rh/frame1-blue.png">
+            <img src="https://i.ibb.co/0ywJbN7/frame2-red.png" class="frame-thumb" data-src="https://i.ibb.co/0ywJbN7/frame2-red.png">
+
+            <label class="frame-thumb" style="display:flex;align-items:center;justify-content:center;background:#fff;">
+                <input id="frameUpload" type="file" accept="image/*" hidden>
+                + Add
+            </label>
+        </div>
+
+        <br>
+
+        <h3>Teks di Foto</h3>
+        <input id="textInput" class="btn" placeholder="Tuliskan teks...">
+        <input id="fontSize" type="number" value="48" class="btn">
+
+    </aside>
+</div>
+
+<script>
+/* ------------------------------------------------------------
+   IMAGE UPLOAD
+------------------------------------------------------------ */
+let photoPreview = document.getElementById("photoPreview");
+let framePreview = document.getElementById("framePreview");
+let textOverlay = document.getElementById("overlayText");
+
+document.getElementById("photoInput").onchange = function(e){
+    let file = e.target.files[0];
+    let url = URL.createObjectURL(file);
+    photoPreview.src = url;
+    photoPreview.style.display = "block";
+};
+
+/* ------------------------------------------------------------
+   FRAME SELECTOR
+------------------------------------------------------------ */
+let thumbs = document.querySelectorAll(".frame-thumb");
+
+thumbs.forEach(t => {
+    t.onclick = function(){
+        thumbs.forEach(x => x.classList.remove("selected"));
+        t.classList.add("selected");
+        let src = t.dataset.src;
+        if(src) framePreview.src = src;
+    }
+});
+
+/* Upload custom frame */
+document.getElementById("frameUpload").onchange = function(e){
+    let url = URL.createObjectURL(e.target.files[0]);
+    framePreview.src = url;
+};
+
+/* ------------------------------------------------------------
+   TEXT HANDLER
+------------------------------------------------------------ */
+document.getElementById("textInput").oninput = function(){
+    textOverlay.innerText = this.value;
+};
+
+document.getElementById("fontSize").oninput = function(){
+    textOverlay.style.fontSize = this.value + "px";
+};
+
+/* Drag text */
+let dragging = false;
+
+textOverlay.onmousedown = e => dragging = true;
+window.onmouseup = e => dragging = false;
+window.onmousemove = e => {
+    if(dragging){
+        textOverlay.style.left = e.pageX - 60 + "px";
+        textOverlay.style.top = e.pageY - 120 + "px";
+    }
+};
+
+/* ------------------------------------------------------------
+   EXPORT CANVAS (DOWNLOAD)
+------------------------------------------------------------ */
+function downloadImage(){
+    let canvas = document.getElementById("resultCanvas");
+    let ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0,0,1080,1080);
+
+    // Draw photo
+    ctx.drawImage(photoPreview, 0, 0, 1080, 1080);
+
+    // Draw frame
+    ctx.drawImage(framePreview, 0, 0, 1080, 1080);
+
+    // Draw text
+    ctx.font = `${document.getElementById("fontSize").value}px Poppins`;
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText(textOverlay.innerText, 540, 1000);
+
+    let link = document.createElement("a");
+    link.download = "twibbon.png";
+    link.href = canvas.toDataURL();
+    link.click();
+}
+</script>
 </body>
 </html>
