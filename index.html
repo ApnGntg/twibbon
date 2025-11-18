@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Twibbon Sekolah — Cantik & Unik</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <h1 class="logo">Twibbon Sekolah</h1>
+      <p class="tag">Buat foto profil sekolah yang indah, unik, dan menarik — cepat & gratis.</p>
+    </div>
+  </header>
+
+  <main class="main container">
+    <section class="controls">
+      <div class="card upload-card">
+        <label class="btn file-btn">
+          Pilih Foto
+          <input id="fileInput" type="file" accept="image/*" hidden>
+        </label>
+        <button id="sampleBtn" class="btn ghost">Gunakan Foto Contoh</button>
+        <button id="resetBtn" class="btn ghost">Reset Posisi</button>
+        <div class="control-row">
+          <label>Zoom</label>
+          <input id="zoom" type="range" min="0.5" max="2.5" step="0.01" value="1">
+        </div>
+        <div class="control-row">
+          <label>Rotasi</label>
+          <input id="rotate" type="range" min="-45" max="45" step="1" value="0">
+        </div>
+        <div class="control-row">
+          <label>Background</label>
+          <select id="bgSelect">
+            <option value="#ffffff">Putih</option>
+            <option value="#f8fafc">Pastel Biru</option>
+            <option value="#fff7ed">Pastel Kuning</option>
+            <option value="transparent">Transparan (PNG)</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button id="downloadBtn" class="btn primary">Download PNG</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview">
+      <div class="card preview-card">
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="previewCanvas" width="800" height="800" aria-label="Preview twibbon"></canvas>
+        </div>
+        <p class="hint">Tarik foto untuk menggeser, gunakan slider untuk zoom/rotasi. Area tengah akan menjadi fokus.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <small>Dibuat dengan ❤️ untuk tema sekolah — ApnGntg</small>
+    </div>
+  </footer>
+
+  <!-- Inline school-themed SVG twibbon overlay.
+       It has a transparent circular "hole" in the middle where the user's photo shows through.
+       We keep it inline so JS can serialize and draw it onto the canvas reliably. -->
+  <svg id="twibbon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="0" height="0" aria-hidden="true">
+    <defs>
+      <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0" stop-color="#4f46e5"/>
+        <stop offset="1" stop-color="#06b6d4"/>
+      </linearGradient>
+      <linearGradient id="g2" x1="0" x2="1">
+        <stop offset="0" stop-color="#fff" stop-opacity="0.85"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0.6"/>
+      </linearGradient>
+      <mask id="hole-mask">
+        <rect width="100%" height="100%" fill="white"/>
+        <!-- hole: black = transparent in mask -->
+        <circle cx="500" cy="360" r="270" fill="black"/>
+      </mask>
+      <filter id="soft">
+        <feGaussianBlur stdDeviation="10" result="b"/>
+        <feBlend in="SourceGraphic" in2="b"/>
+      </filter>
+    </defs>
+
+    <!-- Outer colorful band -->
+    <g mask="url(#hole-mask)">
+      <rect width="100%" height="100%" fill="url(#g1)"/>
+      <g opacity="0.12">
+        <rect x="0" y="0" width="1000" height="1000" fill="black" />
+      </g>
+    </g>
+
+    <!-- Decorative border -->
+    <circle cx="500" cy="360" r="340" fill="none" stroke="url(#g1)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="500" cy="360" r="300" fill="none" stroke="#fff" stroke-opacity="0.7" stroke-width="8" />
+
+    <!-- School elements: pencil, book, star -->
+    <g transform="translate(780,150) rotate(12)">
+      <rect x="-12" y="58" width="140" height="16" rx="3" fill="#ffde59"/>
+      <polygon points="100,0 120,30 60,40 40,10" fill="#ffae42" />
+      <rect x="0" y="0" width="100" height="60" rx="6" fill="#fff" opacity="0.95" />
+      <rect x="6" y="8" width="88" height="44" rx="4" fill="#06b6d4" opacity="0.15"/>
+    </g>
+
+    <g transform="translate(120,680) rotate(-15)">
+      <rect x="-10" y="-40" width="200" height="120" rx="10" fill="#fff" opacity="0.95"/>
+      <path d="M0,20 L100,60 L0,100 z" fill="#60a5fa"/>
+      <path d="M100,60 L200,20 L200,100 z" fill="#93c5fd"/>
+    </g>
+
+    <g transform="translate(160,150) rotate(-8)">
+      <polygon points="0,60 26,26 52,60 20,46" fill="#f472b6" opacity="0.95"/>
+      <circle cx="36" cy="18" r="6" fill="#fff"/>
+    </g>
+
+    <!-- ribbon banner -->
+    <g transform="translate(500,840)">
+      <path d="M-340,0 L340,0 L290,60 L-290,60 Z" fill="url(#g1)" transform="translate(0,-40)"/>
+      <text x="0" y="-6" text-anchor="middle" font-family="Inter,Arial" font-weight="700" font-size="36" fill="#fff">SEKOLAH INDAH & UNIK</text>
+    </g>
+
+    <!-- subtle soft shadow around hole -->
+    <circle cx="500" cy="360" r="270" fill="none" stroke="#000" stroke-opacity="0.08" stroke-width="18" filter="url(#soft)"/>
+
+  </svg>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
