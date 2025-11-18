@@ -1,0 +1,83 @@
+/* background.css
+   Simple animated school scene with moving students and parallax layers.
+*/
+#scene {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 18px auto;
+  height: 320px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(#bde7ff, #eaf6ff 50%, #fff 100%);
+  box-shadow: 0 8px 28px rgba(15,23,42,0.06);
+}
+
+/* SVG sits full size */
+#scene svg { width: 100%; height: 100%; display:block; }
+
+/* parallax layers speeds (controlled via translateX) */
+.layer { transform-origin: 0 0; }
+
+/* simple cloud animation */
+.cloud { animation: cloudMove 40s linear infinite; opacity: 0.95; }
+@keyframes cloudMove {
+  from { transform: translateX(-20%); }
+  to   { transform: translateX(120%); }
+}
+
+/* kid base style - we'll animate translateX for walking */
+.kid {
+  transform-origin: center;
+  cursor: pointer;
+}
+
+/* walking animation: slight leg bob & translate loop */
+.kid.walk {
+  animation: walkStride linear infinite;
+  /* duration set per element by JS via style.animationDuration */
+}
+@keyframes walkStride {
+  0%   { transform: translateY(0) translateX(0) scale(1); }
+  25%  { transform: translateY(-3px) translateX(2px) scale(1.01); }
+  50%  { transform: translateY(0) translateX(0) scale(1); }
+  75%  { transform: translateY(3px) translateX(-2px) scale(0.99); }
+  100% { transform: translateY(0) translateX(0) scale(1); }
+}
+
+/* wave animation on click */
+.kid.wave .hand {
+  transform-origin: top left;
+  animation: waveHand 0.9s ease-in-out 0s 3;
+}
+@keyframes waveHand {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-35deg); }
+  50%  { transform: rotate(8deg); }
+  75%  { transform: rotate(-20deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* spotlight / focus effect */
+#scene .focus {
+  position: absolute;
+  left: 12px; top: 12px;
+  display:flex; gap:8px; align-items:center;
+  z-index: 30;
+}
+.btn {
+  background: rgba(255,255,255,0.92);
+  border-radius: 10px; padding:6px 10px;
+  border:1px solid rgba(10,20,30,0.06);
+  font-weight:600; cursor:pointer;
+}
+.speed {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 8px; border-radius:8px;
+  background: rgba(255,255,255,0.9);
+}
+
+/* responsive: make scene taller on small screens */
+@media (max-width:600px){
+  #scene{ height:380px; }
+}
