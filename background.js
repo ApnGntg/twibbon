@@ -1,83 +1,109 @@
-/* background.css
-   Simple animated school scene with moving students and parallax layers.
-*/
-#scene {
-  position: relative;
-  width: 100%;
-  max-width: 1200px;
-  margin: 18px auto;
-  height: 320px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: linear-gradient(#bde7ff, #eaf6ff 50%, #fff 100%);
-  box-shadow: 0 8px 28px rgba(15,23,42,0.06);
-}
+// background.js
+// Lightweight interactivity for the SVG scene (kids walking + click to wave/move).
+document.addEventListener('DOMContentLoaded', () => {
+  const scene = document.getElementById('scene');
+  if (!scene) return;
 
-/* SVG sits full size */
-#scene svg { width: 100%; height: 100%; display:block; }
+  // Create control panel
+  const ctrl = document.createElement('div');
+  ctrl.className = 'focus';
+  ctrl.innerHTML = `
+    <button id="toggleAnim" class="btn">Pause</button>
+    <div class="speed">Speed: <input id="speedRange" type="range" min="0.3" max="2" step="0.1" value="1"></div>
+  `;
+  scene.appendChild(ctrl);
 
-/* parallax layers speeds (controlled via translateX) */
-.layer { transform-origin: 0 0; }
+  const svg = scene.querySelector('svg');
+  if (!svg) return;
 
-/* simple cloud animation */
-.cloud { animation: cloudMove 40s linear infinite; opacity: 0.95; }
-@keyframes cloudMove {
-  from { transform: translateX(-20%); }
-  to   { transform: translateX(120%); }
-}
+  // Identify kids by class 'kid' inside the inline SVG
+  const kids = Array.from(svg.querySelectorAll('.kid'));
+  // Assign different speeds & start walking
+  kids.forEach((k, i) => {
+    const baseDur = 6 + Math.random() * 6; // 6-12s
+    k.style.animationDuration = `${baseDur}s`;
+    k.classList.add('walk');
+    // make smaller kids slightly faster visually
+    const scale = 0.9 + Math.random() * 0.3;
+    k.style.transform = `scale(${scale})`;
+  });
 
-/* kid base style - we'll animate translateX for walking */
-.kid {
-  transform-origin: center;
-  cursor: pointer;
-}
+  // Pause/Resume toggle
+  const toggleBtn = document.getElementById('toggleAnim');
+  let paused = false;
+  toggleBtn.addEventListener('click', () => {
+    paused = !paused;
+    if (paused) {
+      kids.forEach(k => k.style.animationPlayState = 'paused');
+      toggleBtn.textContent = 'Play';
+    } else {
+      kids.forEach(k => k.style.animationPlayState = 'running');
+      toggleBtn.textContent = 'Pause';
+    }
+  });
 
-/* walking animation: slight leg bob & translate loop */
-.kid.walk {
-  animation: walkStride linear infinite;
-  /* duration set per element by JS via style.animationDuration */
-}
-@keyframes walkStride {
-  0%   { transform: translateY(0) translateX(0) scale(1); }
-  25%  { transform: translateY(-3px) translateX(2px) scale(1.01); }
-  50%  { transform: translateY(0) translateX(0) scale(1); }
-  75%  { transform: translateY(3px) translateX(-2px) scale(0.99); }
-  100% { transform: translateY(0) translateX(0) scale(1); }
-}
+  // Speed control modifies animationDuration
+  const speedRange = document.getElementById('speedRange');
+  speedRange.addEventListener('input', (e) => {
+    const speed = parseFloat(e.target.value);
+    kids.forEach((k) => {
+      // read original duration or fallback
+      const cur = parseFloat(k.style.animationDuration) || 8;
+      // adjust by dividing by speed (e.g. speed 2 => faster => half duration)
+      k.style.animationDuration = `${cur / speed}s`;
+    });
+  });
 
-/* wave animation on click */
-.kid.wave .hand {
-  transform-origin: top left;
-  animation: waveHand 0.9s ease-in-out 0s 3;
-}
-@keyframes waveHand {
-  0%   { transform: rotate(0deg); }
-  25%  { transform: rotate(-35deg); }
-  50%  { transform: rotate(8deg); }
-  75%  { transform: rotate(-20deg); }
-  100% { transform: rotate(0deg); }
-}
+  // Click on a kid: wave; click on background: make nearest kid walk to point
+  svg.addEventListener('click', (ev) => {
+    // get svg point
+    const pt = svg.createSVGPoint();
+    pt.x = ev.clientX; pt.y = ev.clientY;
+    const ctm = svg.getScreenCTM().inverse();
+    const loc = pt.matrixTransform(ctm);
 
-/* spotlight / focus effect */
-#scene .focus {
-  position: absolute;
-  left: 12px; top: 12px;
-  display:flex; gap:8px; align-items:center;
-  z-index: 30;
-}
-.btn {
-  background: rgba(255,255,255,0.92);
-  border-radius: 10px; padding:6px 10px;
-  border:1px solid rgba(10,20,30,0.06);
-  font-weight:600; cursor:pointer;
-}
-.speed {
-  display:inline-flex; align-items:center; gap:6px;
-  padding:6px 8px; border-radius:8px;
-  background: rgba(255,255,255,0.9);
-}
+    const targetX = loc.x, targetY = loc.y;
 
-/* responsive: make scene taller on small screens */
-@media (max-width:600px){
-  #scene{ height:380px; }
-}
+    // determine if clicked a kid group
+    const clickedKid = ev.target.closest('.kid');
+    if (clickedKid) {
+      // trigger wave: add 'wave' class briefly
+      clickedKid.classList.add('wave');
+      setTimeout(() => clickedKid.classList.remove('wave'), 1200);
+      return;
+    }
+
+    // otherwise move nearest kid
+    let nearest = null; let nd = Infinity;
+    kids.forEach(k => {
+      const bbox = k.getBBox();
+      const cx = bbox.x + bbox.width / 2;
+      const cy = bbox.y + bbox.height / 2;
+      const d = Math.hypot(cx - targetX, cy - targetY);
+      if (d < nd) { nd = d; nearest = k; }
+    });
+    if (!nearest) return;
+
+    // animate translate via CSS transform + transition
+    // compute delta relative to current transform origin
+    const bbox = nearest.getBBox();
+    const cx = bbox.x + bbox.width / 2;
+    const cy = bbox.y + bbox.height / 2;
+    const dx = targetX - cx;
+    const dy = targetY - cy;
+
+    // Use a temporary wrapper transform via style transform (preserve scale)
+    const prev = nearest.style.transform || '';
+    nearest.style.transition = 'transform 1.2s ease-out';
+    nearest.style.transform = `${prev} translate(${dx}px, ${dy}px)`;
+    // keep walking while moving
+    nearest.classList.add('walk');
+    setTimeout(() => {
+      nearest.style.transition = '';
+      // small wave on arrival
+      nearest.classList.add('wave');
+      setTimeout(() => nearest.classList.remove('wave'), 900);
+    }, 1300);
+  });
+
+});
